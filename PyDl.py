@@ -2,6 +2,11 @@
 import asyncio
 from music import MusicCore
 
-c = MusicCore()
-loop = asyncio.get_event_loop()
-loop.run_until_complete(c.queue(["https://www.youtube.com/watch?v=mkl1qRw3F8g"]))
+
+async def main():
+    c = MusicCore()
+    await c.queue(["https://www.youtube.com/watch?v=mkl1qRw3F8g"])
+    await c.process_queue()
+
+asyncio.run(main())
+

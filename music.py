@@ -10,16 +10,19 @@ import youtube_dl
 
 ytdl_params = {
     'format': 'bestaudio/best',
-    'extractaudio': True,
-    'audioformat': 'mp3',
-    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'postprocessors': [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+        'preferredquality': '192',
+    }],
+    'outtmpl': '%(title)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': False,
     'nocheckcertificate': True,
-    'ignoreerrors': True,
+    'ignoreerrors': False,
     'logtostderr': False,
-    'quiet': True,
-    'no_warnings': True,
+    'quiet': False,
+    'no_warnings': False,
     'default_search': 'auto',
     'source_address': '0.0.0.0'
 }
@@ -34,7 +37,8 @@ class QueueItem(object):
         self.title = self.item_info.get('title')
         self.duration = int(self.item_info.get('duration', 0))
         self.downloaded = False
-        self.loop = ThreadPoolExecutor()
+        self.loop = asyncio.get_event_loop()
+        self.threads = ThreadPoolExecutor()
         self.ytdl_params = ytdl_params
         self.ytdl = youtube_dl.YoutubeDL(self.ytdl_params)
         self.token = self.tokenize()
@@ -49,7 +53,7 @@ class QueueItem(object):
 
     async def download(self):
         if self.url:
-            out_location = f'cache/{self.token}'
+            out_location = f'cache/' + self.ytdl_params['outtmpl']
             if not os.path.exists(out_location):
                 self.ytdl.params.update({'outtmpl': out_location})
                 task = functools.partial(self.ytdl.extract_info, self.url)
@@ -166,6 +170,14 @@ class MusicCore(object):
         #     else:
         #         response = discord.Embed(color=0x3B88C3, title='🎵 The queue is empty.')
         #     await message.channel.send(embed=response)
+
+    async def process_queue(self, guild_id=1):
+        queue_container = self.get_queue(guild_id)
+        if not queue_container.empty():
+            while queue_container.qsize() > 0:
+                q = await queue_container.get()
+                await q.download()
+
 
     # @staticmethod
     # async def listify_queue(queue: asyncio.Queue):
