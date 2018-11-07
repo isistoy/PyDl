@@ -53,7 +53,7 @@ class QueueItem(object):
 
     async def download(self):
         if self.url:
-            out_location = f'cache/' + self.ytdl_params['outtmpl']
+            out_location = f'/media/sf_vmtransfer/' + self.ytdl_params['outtmpl']
             if not os.path.exists(out_location):
                 self.ytdl.params.update({'outtmpl': out_location})
                 task = functools.partial(self.ytdl.extract_info, self.url)
