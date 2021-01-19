@@ -43,6 +43,7 @@ class QueueItem(object):
         self.ytdl = youtube_dl.YoutubeDL(self.ytdl_params)
         self.token = self.tokenize()
         self.location = None
+        self.defaultLocation = f'~/Music/'
 
     def tokenize(self):
         name = 'yt_' + self.video_id
@@ -53,7 +54,7 @@ class QueueItem(object):
 
     async def download(self):
         if self.url:
-            out_location = f'/media/sf_vmtransfer/' + self.ytdl_params['outtmpl']
+            out_location = self.defaultLocation + self.ytdl_params['outtmpl']
             if not os.path.exists(out_location):
                 self.ytdl.params.update({'outtmpl': out_location})
                 task = functools.partial(self.ytdl.extract_info, self.url)
